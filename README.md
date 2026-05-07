@@ -1,58 +1,55 @@
-# Gates Fellowship Eval: Maternal Health AI Auditor
+# Maternal Health AI Evaluation
+### Gates Foundation AI Fellowship — India 2026 | Technical Assignment
 
-This repository contains an automated evaluation framework to audit large language models (specifically Gemini 2.5 Flash) on critical maternal health inquiries. 
+**Path chosen:** Option B — Critique & Rebuild  
+**Live report:** https://nandinikhandelwal120603.github.io/gates-fellowship-eval/  
+**Endpoint model:** gemini-2.5-flash | **Judge model:** gemini-3-flash-preview
 
-The evaluation uses **LLM-as-a-Judge** (powered by Gemini 3 Flash Preview) to critique the responses based on predefined criteria, ensuring safety, accuracy, and appropriate medical disclaimers.
+## What This Is
+A lightweight AI evaluation harness that sends structured maternal health
+prompts to a Gemini conversational endpoint and scores responses using
+a dual-layer evaluation approach: rule-based keyword checking + LLM-as-judge.
 
-## Project Structure
-```text
-gates-fellowship-eval/
-├── evaluator/
-│   ├── __init__.py
-│   ├── prompts.py        # 15 maternal health test cases
-│   ├── endpoint.py       # Gemini 2.5 Flash (system being evaluated)
-│   ├── judge.py          # Gemini 3 Flash Preview (evaluator/critic)
-│   └── runner.py         # Orchestrates the evaluation
-├── results/
-│   ├── results.json      # Machine-readable output (generated)
-│   └── report.html       # Live report page (generated)
-├── report/
-│   ├── __init__.py
-│   └── generate.py       # Logic to generate the HTML report
-├── .env                  # API Keys (not tracked)
-├── requirements.txt      # Dependencies
-├── main.py               # Main execution script
-└── README.md             # This file
+## Why Option B
+The CeRAI AIEvaluationTool failed at installation due to undocumented
+system-level dependencies (MariaDB Connector/C). Further code review
+revealed architectural limitations unsuitable for API-first evaluation.
+Issues filed: #108, #109, #110, #111
+
+## Key Finding
+Rule check pass rate: 46.7% | LLM judge avg: 9.95/10
+
+The divergence between these two numbers is itself the most important
+finding: keyword-based evaluation produces false positives on contextually
+correct responses ("don't wait" triggers "wait" as forbidden keyword).
+This validates the critique of simplistic evaluation frameworks.
+
+## Setup
+
+```bash
+git clone https://github.com/nandinikhandelwal120603/gates-fellowship-eval
+cd gates-fellowship-eval
+python3 -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env   # add your GEMINI_API_KEY
+python main.py
 ```
 
-## Setup & Execution
+## Structure
+- **evaluator/**
+  - `prompts.py`: 15 test cases across 5 categories
+  - `endpoint.py`: Gemini 2.5 Flash (system under evaluation)
+  - `judge.py`: Gemini 3 Flash Preview (evaluator)
+  - `runner.py`: Orchestration + aggregation
+- **report/**
+  - `generate.py`: HTML report generator
+- **results/**
+  - `results.json`: Machine-readable output
+  - `report.html`: Human-readable report
+- `main.py`: Entry point
 
-1. **Environment Setup**
-   Ensure you have Python 3.9+ and set up your virtual environment:
-   ```bash
-   python3 -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
-
-2. **API Keys**
-   You need a Google Gemini API key. Add it to your `.env` file:
-   ```env
-   GEMINI_API_KEY=your_api_key_here
-   ```
-
-3. **Run the Evaluation**
-   Execute the evaluation pipeline (takes ~3-5 minutes due to API rate limits):
-   ```bash
-   python main.py
-   ```
-   This will query the test cases, judge the responses, and generate both `results.json` and a visually readable `report.html` in the `results/` folder.
-
-## Viewing the Report
-Once generated, you can open `results/report.html` locally in your browser. 
-
-To host the report live via GitHub Pages:
-1. Push the repository to GitHub.
-2. Go to **Settings** > **Pages**.
-3. Set the source branch (e.g., `main`).
-4. Access the live endpoint!
+## Responsible AI Note
+This harness tests surface-level safety signals only. It does not test
+clinical accuracy, non-English inputs, or real-world usability by frontline
+health workers. A production maternal health AI would require clinical
+expert review and ongoing monitoring.
