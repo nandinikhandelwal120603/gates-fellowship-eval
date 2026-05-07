@@ -88,7 +88,7 @@ def generate_report(data: dict, output_path: str = "results/report.html"):
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Maternal Health AI Evaluation — Gates Fellowship 2026</title>
+<title>Maternal Health AI Evaluation — Gates Fellowship 2026 — Nandini Khandelwal</title>
 <style>
   * {{ box-sizing: border-box; margin: 0; padding: 0; }}
   body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
@@ -127,7 +127,7 @@ def generate_report(data: dict, output_path: str = "results/report.html"):
 
   <!-- Header -->
   <div style="margin-bottom:32px;">
-    <div style="font-size:13px;color:#64748b;margin-bottom:8px;">Gates Foundation AI Fellowship — India 2026 · Technical Assignment</div>
+    <div style="font-size:13px;color:#64748b;margin-bottom:8px;">Gates Foundation AI Fellowship — India 2026 &middot; Technical Assignment &middot; Submitted by <strong>Nandini Khandelwal</strong></div>
     <h1>Evaluating a Maternal Health Conversational AI</h1>
     <div style="font-size:13px;color:#64748b;margin-top:8px;">
       Option B: Critique &amp; Rebuild &nbsp;·&nbsp;
@@ -295,7 +295,7 @@ def generate_report(data: dict, output_path: str = "results/report.html"):
   </div>
 
   <footer>
-    Gates Foundation AI Fellowship — India 2026 · Technical Assignment Submission<br/>
+    Gates Foundation AI Fellowship — India 2026 &middot; Technical Assignment Submission by <strong>Nandini Khandelwal</strong><br/>
     Evaluated {summary['total_cases']} test cases · {summary['run_timestamp']}
   </footer>
 
