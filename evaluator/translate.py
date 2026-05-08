@@ -30,7 +30,7 @@ SARVAM_API_KEY = os.getenv("SARVAM_API_KEY")
 # All 22 Indian languages supported — we use 3 for coverage breadth
 LANGUAGE_MAP = {
     "hindi": {"code": "hi-IN", "name": "Hindi"},
-    "urdu":  {"code": "ur-IN", "name": "Urdu"},
+    "gujarati":  {"code": "gu-IN", "name": "Gujarati"},
     "tamil": {"code": "ta-IN", "name": "Tamil"},
 }
 

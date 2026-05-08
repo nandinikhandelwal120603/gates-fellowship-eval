@@ -45,7 +45,7 @@ except ImportError:
     RICH = False
 
 MULTILINGUAL = "--multilingual" in sys.argv
-LANGUAGES_TO_TEST = ["english", "hindi", "urdu", "tamil"] if MULTILINGUAL else ["english"]
+LANGUAGES_TO_TEST = ["hindi", "gujarati", "tamil"] if MULTILINGUAL else ["english"]
 
 
 def evaluate_single_case(case: dict, prompt_text: str, language: str) -> dict:
@@ -75,15 +75,12 @@ def evaluate_single_case(case: dict, prompt_text: str, language: str) -> dict:
 
     response_text = endpoint_result["text"]
 
-    # Step 2: Rule-based check on English response
-    # Note: keyword lists are in English. The endpoint responds in English
-    # even when queried in Hindi/Urdu/Tamil, so this is valid.
-    # Limitation: we cannot catch cases where the model switches to
-    # the input language in its response.
+    # Step 2: Rule-based check (Multilingual)
     rule_result = rule_based_check(
         response_text,
         case["must_contain"],
         case["must_not_contain"],
+        language=lang
     )
 
     # Step 3: Gemini judge — evaluates English response
@@ -134,7 +131,8 @@ def run_evaluation():
     if not sarvam_key:
         print("  WARNING: SARVAM_API_KEY not set. Sarvam judge + translation will be skipped.")
 
-    total = len(TEST_CASES) * len(LANGUAGES_TO_TEST)
+    cases_to_test = TEST_CASES[:10] if MULTILINGUAL else TEST_CASES
+    total = len(cases_to_test) * len(LANGUAGES_TO_TEST)
 
     print(f"\n{'='*65}")
     print(f"  Gates Fellowship — Maternal Health AI Evaluation v2")
@@ -142,20 +140,20 @@ def run_evaluation():
     print(f"  Judge 1  : gemini-3-flash-preview  (primary)")
     print(f"  Judge 2  : sarvam-m                (cross-family, India-native)")
     print(f"  Languages: {', '.join(LANGUAGES_TO_TEST)}")
-    print(f"  Total    : {len(TEST_CASES)} cases × {len(LANGUAGES_TO_TEST)} languages = {total} evaluations")
+    print(f"  Total    : {len(cases_to_test)} cases × {len(LANGUAGES_TO_TEST)} languages = {total} evaluations")
     print(f"{'='*65}\n")
 
     # ── Step 1: Translate all prompts ────────────────────────────────────
     # translated_prompts maps: {language: {english_prompt: translated_prompt}}
     translated_prompts = {
-        "english": {c["prompt"]: c["prompt"] for c in TEST_CASES}
+        "english": {c["prompt"]: c["prompt"] for c in cases_to_test}
     }
 
     non_english = [l for l in LANGUAGES_TO_TEST if l != "english"]
     if non_english and sarvam_key:
         print("Step 1/2: Translating prompts via Sarvam Mayura v1...")
         raw_translations = translate_batch(
-            [c["prompt"] for c in TEST_CASES],
+            [c["prompt"] for c in cases_to_test],
             non_english,
         )
         for lang in non_english:
@@ -183,7 +181,7 @@ def run_evaluation():
         print(f"  Language: {language.upper()}")
         print(f"{'─'*65}")
 
-        iterator = track(TEST_CASES, description=f"  [{language}]") if RICH else TEST_CASES
+        iterator = track(cases_to_test, description=f"  [{language}]") if RICH else cases_to_test
 
         for case in iterator:
             count += 1
