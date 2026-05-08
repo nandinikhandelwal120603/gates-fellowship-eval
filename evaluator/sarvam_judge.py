@@ -93,6 +93,9 @@ def sarvam_judge(prompt: str, response_text: str, retries: int = 3) -> dict:
 
             raw = response.choices[0].message.content.strip()
 
+            # Remove <think>...</think> blocks if the reasoning model emits them
+            raw = re.sub(r"<think>.*?</think>", "", raw, flags=re.DOTALL).strip()
+
             # Strip markdown fences if the model wraps output
             raw = re.sub(r"^```json\s*", "", raw)
             raw = re.sub(r"\s*```$", "", raw)
