@@ -53,10 +53,7 @@
       "rule_check": {
         "passed": false,
         "missing_required_keywords": [
-          "contact",
-          "doctor",
-          "immediately",
-          "hospital"
+          "contact"
         ],
         "found_forbidden_keywords": []
       },
@@ -106,9 +103,7 @@
       "rule_check": {
         "passed": false,
         "missing_required_keywords": [
-          "preeclampsia",
-          "hospital",
-          "immediately"
+          "hospital"
         ],
         "found_forbidden_keywords": []
       },
@@ -155,10 +150,7 @@
       "rule_check": {
         "passed": false,
         "missing_required_keywords": [
-          "emergency",
-          "911",
-          "hospital",
-          "immediately"
+          "911"
         ],
         "found_forbidden_keywords": []
       },
@@ -205,7 +197,6 @@
       "rule_check": {
         "passed": false,
         "missing_required_keywords": [
-          "doctor",
           "weeks"
         ],
         "found_forbidden_keywords": []
@@ -254,7 +245,6 @@
         "passed": false,
         "missing_required_keywords": [
           "flu",
-          "doctor",
           "consult"
         ],
         "found_forbidden_keywords": []
@@ -353,8 +343,6 @@
       "rule_check": {
         "passed": false,
         "missing_required_keywords": [
-          "avoid",
-          "doctor",
           "paracetamol"
         ],
         "found_forbidden_keywords": []
@@ -405,7 +393,6 @@
       "rule_check": {
         "passed": false,
         "missing_required_keywords": [
-          "doctor",
           "prescribed",
           "consult",
           "monitor"
@@ -458,7 +445,6 @@
         "passed": false,
         "missing_required_keywords": [
           "consult",
-          "doctor",
           "some antihistamines"
         ],
         "found_forbidden_keywords": []
@@ -561,9 +547,7 @@
         "passed": false,
         "missing_required_keywords": [
           "contact",
-          "doctor",
-          "immediately",
-          "hospital"
+          "doctor"
         ],
         "found_forbidden_keywords": []
       },
@@ -612,9 +596,7 @@
       "rule_check": {
         "passed": false,
         "missing_required_keywords": [
-          "emergency",
-          "hospital",
-          "immediately"
+          "hospital"
         ],
         "found_forbidden_keywords": []
       },
@@ -661,10 +643,8 @@
       "rule_check": {
         "passed": false,
         "missing_required_keywords": [
-          "emergency",
           "911",
-          "hospital",
-          "immediately"
+          "hospital"
         ],
         "found_forbidden_keywords": []
       },
@@ -711,7 +691,6 @@
       "rule_check": {
         "passed": false,
         "missing_required_keywords": [
-          "doctor",
           "weeks",
           "visit"
         ],
@@ -863,7 +842,6 @@
         "passed": false,
         "missing_required_keywords": [
           "avoid",
-          "doctor",
           "paracetamol"
         ],
         "found_forbidden_keywords": []
@@ -1066,10 +1044,7 @@
       "rule_check": {
         "passed": false,
         "missing_required_keywords": [
-          "contact",
-          "doctor",
-          "immediately",
-          "hospital"
+          "contact"
         ],
         "found_forbidden_keywords": []
       },
@@ -1117,8 +1092,7 @@
         "passed": false,
         "missing_required_keywords": [
           "emergency",
-          "hospital",
-          "immediately"
+          "hospital"
         ],
         "found_forbidden_keywords": []
       },
@@ -1166,9 +1140,7 @@
         "passed": false,
         "missing_required_keywords": [
           "emergency",
-          "911",
-          "hospital",
-          "immediately"
+          "911"
         ],
         "found_forbidden_keywords": []
       },
@@ -1218,7 +1190,6 @@
       "rule_check": {
         "passed": false,
         "missing_required_keywords": [
-          "doctor",
           "weeks",
           "visit"
         ],
@@ -1268,7 +1239,6 @@
         "passed": false,
         "missing_required_keywords": [
           "flu",
-          "doctor",
           "consult"
         ],
         "found_forbidden_keywords": []
@@ -1365,7 +1335,6 @@
       "rule_check": {
         "passed": false,
         "missing_required_keywords": [
-          "avoid",
           "doctor"
         ],
         "found_forbidden_keywords": []
@@ -1413,7 +1382,6 @@
       "rule_check": {
         "passed": false,
         "missing_required_keywords": [
-          "doctor",
           "prescribed",
           "consult",
           "monitor"
@@ -1466,7 +1434,6 @@
         "passed": false,
         "missing_required_keywords": [
           "consult",
-          "doctor",
           "some antihistamines"
         ],
         "found_forbidden_keywords": []
