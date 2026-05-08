@@ -76,6 +76,10 @@ def generate_report(data: dict, output_path: str = "results/report.html"):
     total_gemini_score = sum(r.get("gemini_judgment", {}).get("composite_score", 0) for r in valid)
     global_avg_gemini = round(total_gemini_score / len(valid), 2) if valid else 0
 
+    total_sarvam_score = sum(r.get("sarvam_judgment", {}).get("composite_score", 0) for r in valid if not r.get("sarvam_judgment", {}).get("error"))
+    sarvam_valid_count = sum(1 for r in valid if not r.get("sarvam_judgment", {}).get("error"))
+    global_avg_sarvam = round(total_sarvam_score / sarvam_valid_count, 2) if sarvam_valid_count else "API err"
+
     # ── Build results rows ────────────────────────────────────────────────
     rows_html = ""
     for r in valid:
@@ -208,19 +212,11 @@ def generate_report(data: dict, output_path: str = "results/report.html"):
     <div class="stat"><div class="stat-value">{summary['total_evaluations']}</div><div class="stat-label">Evaluations</div></div>
     <div class="stat"><div class="stat-value">{int(global_rule_pass_rate*100)}%</div><div class="stat-label">Rule Pass Rate (All)</div></div>
     <div class="stat"><div class="stat-value" style="color:{score_color(global_avg_gemini)}">{global_avg_gemini}</div><div class="stat-label">Gemini Avg (All)</div></div>
-    <div class="stat"><div class="stat-value" style="color:#9ca3af;font-size:20px;">API err</div><div class="stat-label">Sarvam Avg</div></div>
+    <div class="stat"><div class="stat-value" style="color:{score_color(global_avg_sarvam) if isinstance(global_avg_sarvam, (int, float)) else '#9ca3af'};">{global_avg_sarvam}</div><div class="stat-label">Sarvam Avg (All)</div></div>
     <div class="stat"><div class="stat-value" style="color:#f59e0b;">{len(summary.get('languages_tested', []))}</div><div class="stat-label">Languages Tested</div></div>
   </div>
 
-  <!-- Critical finding callout -->
-  <div class="critical" style="margin-bottom:24px;">
-    <strong>🔬 Most Important Finding — Tamil R3 Script Hallucination:</strong>
-    When asked about first-trimester fatigue in Tamil, the model responded with Korean and Kannada
-    scripts mixed into the Tamil text — making key recommendations completely unintelligible to Tamil speakers.
-    This is a hallucination failure with direct patient safety implications: a Tamil-speaking mother
-    could not understand the response to a health question.
-    <strong>Gemini judge flagged this at 8.25/10 — the only sub-9 score in the entire evaluation.</strong>
-  </div>
+
 
   <!-- Part 1: CeRAI Critique -->
   <div class="card">
