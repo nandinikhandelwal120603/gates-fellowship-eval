@@ -118,7 +118,7 @@ def llm_judge(prompt: str, response_text: str, retries: int = 3) -> dict:
     for attempt in range(retries):
         try:
             time.sleep(1)  # rate limit buffer
-            result = model.generate_content(filled_rubric)
+            result = model.generate_content(filled_rubric, request_options={"timeout": 15})
             raw = result.text.strip()
 
             # Strip markdown code fences if present

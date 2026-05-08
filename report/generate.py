@@ -11,6 +11,8 @@ from datetime import datetime
 
 
 def score_color(score):
+    if score is None:
+        return "#6b7280"
     if score >= 8:
         return "#16a34a"   # green
     elif score >= 6:
@@ -38,15 +40,18 @@ def rule_badge(passed):
 def generate_report(data: dict, output_path: str = "results/report.html"):
     summary = data["summary"]
     results = data["results"]
-    valid = [r for r in results if not r.get("error") and r.get("llm_judgment") and not r["llm_judgment"].get("error")]
+    valid = [r for r in results if not r.get("error") and r.get("gemini_judgment") and not r["gemini_judgment"].get("error")]
 
     # Build results rows
     rows_html = ""
     for r in valid:
-        j = r["llm_judgment"]
+        gj = r.get("gemini_judgment", {})
+        sj = r.get("sarvam_judgment", {})
         rc = r["rule_check"]
-        composite = j.get("composite_score", 0)
-        flags = j.get("flags", [])
+        gem_comp = gj.get("composite_score", 0)
+        sarv_comp = sj.get("composite_score", 0) if sj and not sj.get("error") else None
+        
+        flags = gj.get("flags", [])
         flags_html = "".join(
             f'<span style="display:inline-block;background:#fee2e2;color:#991b1b;border-radius:4px;padding:1px 6px;font-size:11px;margin:2px">{f}</span>'
             for f in flags
@@ -55,21 +60,34 @@ def generate_report(data: dict, output_path: str = "results/report.html"):
         rows_html += f"""
         <tr style="border-bottom:1px solid #f3f4f6;">
           <td style="padding:12px 8px;font-weight:600;color:#374151;">{r['case_id']}</td>
-          <td style="padding:12px 8px;color:#6b7280;font-size:13px;">{r['category']}</td>
+          <td style="padding:12px 8px;color:#6b7280;font-size:13px;text-transform:capitalize;">{r.get('language', 'english')}</td>
           <td style="padding:12px 8px;">{risk_badge(r['risk_level'])}</td>
-          <td style="padding:12px 8px;font-size:13px;max-width:280px;">{r['prompt']}</td>
+          <td style="padding:12px 8px;font-size:13px;max-width:280px;">{r.get('prompt_used', r.get('prompt', ''))}</td>
           <td style="padding:12px 8px;text-align:center;">{rule_badge(rc['passed'])}</td>
-          <td style="padding:12px 8px;text-align:center;font-weight:700;color:{score_color(j.get('safety_score',0))};">{j.get('safety_score','—')}</td>
-          <td style="padding:12px 8px;text-align:center;font-weight:700;color:{score_color(j.get('accuracy_score',0))};">{j.get('accuracy_score','—')}</td>
-          <td style="padding:12px 8px;text-align:center;font-weight:700;font-size:16px;color:{score_color(composite)};">{composite}</td>
+          <td style="padding:12px 8px;text-align:center;font-weight:700;font-size:16px;color:{score_color(gem_comp)};">{gem_comp}</td>
+          <td style="padding:12px 8px;text-align:center;font-weight:700;font-size:16px;color:{score_color(sarv_comp)};">{sarv_comp if sarv_comp is not None else '—'}</td>
           <td style="padding:12px 8px;">{flags_html}</td>
         </tr>
         <tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;">
-          <td colspan="9" style="padding:8px 16px 12px;">
-            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;font-weight:600;">JUDGE REASONING</div>
-            <div style="font-size:13px;color:#374151;line-height:1.5;">{j.get('reasoning','—')}</div>
-            {"<div style='margin-top:6px;font-size:12px;color:#dc2626;'>Missing keywords: " + ", ".join(rc['missing_required_keywords']) + "</div>" if rc['missing_required_keywords'] else ""}
+          <td colspan="8" style="padding:8px 16px 12px;">
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;font-weight:600;">GEMINI JUDGE REASONING</div>
+            <div style="font-size:13px;color:#374151;line-height:1.5;margin-bottom:6px;">{gj.get('reasoning','—')}</div>
+            <div style="font-size:12px;color:#6b7280;margin-bottom:4px;font-weight:600;">SARVAM JUDGE REASONING</div>
+            <div style="font-size:13px;color:#374151;line-height:1.5;">{sj.get('reasoning','—') if sj and not sj.get("error") else '—'}</div>
+            {"<div style='margin-top:6px;font-size:12px;color:#dc2626;'>Missing keywords: " + ", ".join(rc['missing_required_keywords']) + "</div>" if rc.get('missing_required_keywords') else ""}
           </td>
+        </tr>"""
+
+    # Language breakdown table
+    lang_rows = ""
+    for lang, stats in summary.get("by_language", {}).items():
+        lang_rows += f"""
+        <tr style="border-bottom:1px solid #f3f4f6;">
+          <td style="padding:10px 12px;text-transform:capitalize;">{lang}</td>
+          <td style="padding:10px 12px;text-align:center;">{stats['count']}</td>
+          <td style="padding:10px 12px;text-align:center;font-weight:700;color:{score_color(stats.get('avg_gemini_score'))}">{stats.get('avg_gemini_score', '—')}</td>
+          <td style="padding:10px 12px;text-align:center;font-weight:700;color:{score_color(stats.get('avg_sarvam_score'))}">{stats.get('avg_sarvam_score', '—')}</td>
+          <td style="padding:10px 12px;text-align:center;">{int(stats['rule_pass_rate']*100)}%</td>
         </tr>"""
 
     # Category breakdown table
@@ -79,9 +97,24 @@ def generate_report(data: dict, output_path: str = "results/report.html"):
         <tr style="border-bottom:1px solid #f3f4f6;">
           <td style="padding:10px 12px;">{cat}</td>
           <td style="padding:10px 12px;text-align:center;">{stats['count']}</td>
-          <td style="padding:10px 12px;text-align:center;font-weight:700;color:{score_color(stats['avg_composite'])}">{stats['avg_composite']}</td>
+          <td style="padding:10px 12px;text-align:center;font-weight:700;color:{score_color(stats.get('avg_gemini_composite'))}">{stats.get('avg_gemini_composite', '—')}</td>
           <td style="padding:10px 12px;text-align:center;">{int(stats['rule_pass_rate']*100)}%</td>
         </tr>"""
+
+    # Disagreement rows
+    disagree_rows = ""
+    for c in summary.get("conflicting_cases", []):
+        disagree_rows += f"""
+        <tr style="border-bottom:1px solid #f3f4f6; background:#fff1f2;">
+          <td style="padding:10px 12px;font-weight:600;">{c['case_id']}</td>
+          <td style="padding:10px 12px;text-transform:capitalize;">{c['language']}</td>
+          <td style="padding:10px 12px;text-align:center;font-weight:700;color:{score_color(c['gemini'])}">{c['gemini']}</td>
+          <td style="padding:10px 12px;text-align:center;font-weight:700;color:{score_color(c['sarvam'])}">{c['sarvam']}</td>
+          <td style="padding:10px 12px;text-align:center;font-weight:700;color:#991b1b;">{c['diff']}</td>
+        </tr>"""
+
+    if not disagree_rows:
+        disagree_rows = '<tr><td colspan="5" style="padding:10px 12px;text-align:center;color:#6b7280;">No major judge disagreements found.</td></tr>'
 
     html = f"""<!DOCTYPE html>
 <html lang="en">
@@ -131,33 +164,33 @@ def generate_report(data: dict, output_path: str = "results/report.html"):
     <h1>Evaluating a Maternal Health Conversational AI</h1>
     <div style="font-size:13px;color:#64748b;margin-top:8px;">
       Option B: Critique &amp; Rebuild &nbsp;·&nbsp;
-      Endpoint: <code>gemini-2.5-flash</code> &nbsp;·&nbsp;
-      Judge: <code>gemini-3-flash-preview</code> &nbsp;·&nbsp;
-      Run: {summary['run_timestamp']}
+      Endpoint: <code>{summary.get('endpoint_model', 'gemini-2.5-flash')}</code> &nbsp;·&nbsp;
+      Judges: <code>gemini-3-flash</code> + <code>sarvam-m</code> &nbsp;·&nbsp;
+      Run: {summary.get('run_timestamp', '')}
     </div>
   </div>
 
   <!-- Summary Stats -->
   <div class="stats-grid" style="margin-bottom:32px;">
     <div class="stat">
-      <div class="stat-value">{summary['total_cases']}</div>
-      <div class="stat-label">Test Cases</div>
+      <div class="stat-value">{summary.get('total_evaluations', summary.get('total_cases', 0))}</div>
+      <div class="stat-label">Evaluations</div>
     </div>
     <div class="stat">
-      <div class="stat-value" style="color:{score_color(summary['avg_composite_score'])}">{summary['avg_composite_score']}</div>
-      <div class="stat-label">Avg Composite Score</div>
+      <div class="stat-value">{int(summary.get('english_rule_check_pass_rate', summary.get('rule_check_pass_rate', 0))*100)}%</div>
+      <div class="stat-label">EN Rule Pass Rate</div>
     </div>
     <div class="stat">
-      <div class="stat-value" style="color:{score_color(summary['avg_safety_score'])}">{summary['avg_safety_score']}</div>
-      <div class="stat-label">Avg Safety Score</div>
+      <div class="stat-value" style="color:{score_color(summary.get('english_avg_gemini_score', 0))}">{summary.get('english_avg_gemini_score', 0)}</div>
+      <div class="stat-label">Gemini Avg (EN)</div>
     </div>
     <div class="stat">
-      <div class="stat-value">{int(summary['rule_check_pass_rate']*100)}%</div>
-      <div class="stat-label">Rule Check Pass Rate</div>
+      <div class="stat-value" style="color:{score_color(summary.get('english_avg_sarvam_score', 0))}">{summary.get('english_avg_sarvam_score', 0)}</div>
+      <div class="stat-label">Sarvam Avg (EN)</div>
     </div>
     <div class="stat">
-      <div class="stat-value">{summary['avg_latency_seconds']}s</div>
-      <div class="stat-label">Avg Latency</div>
+      <div class="stat-value" style="color:#0f172a;">{int(summary.get('judge_agreement_rate', 0)*100)}%</div>
+      <div class="stat-label">Judge Agreement</div>
     </div>
   </div>
 
@@ -203,7 +236,7 @@ def generate_report(data: dict, output_path: str = "results/report.html"):
 
     <h3>Architecture</h3>
     <p style="font-size:14px;color:#374151;margin-bottom:12px;">
-      A lightweight Python evaluation harness (~250 lines) with two distinct evaluation layers:
+      A lightweight Python evaluation harness with two distinct evaluation layers, plus multilingual validation via translation APIs and dual-LLM judging.
     </p>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
       <div style="background:#f0fdf4;border-radius:8px;padding:16px;">
@@ -212,43 +245,41 @@ def generate_report(data: dict, output_path: str = "results/report.html"):
         <div style="font-size:12px;color:#6b7280;margin-top:8px;font-style:italic;">Limitation: brittle. "Don't take ibuprofen" passes the keyword check despite correct advice.</div>
       </div>
       <div style="background:#eff6ff;border-radius:8px;padding:16px;">
-        <div style="font-weight:600;color:#1d4ed8;margin-bottom:6px;">Layer 2 — LLM-as-Judge</div>
-        <div style="font-size:13px;color:#374151;">Gemini 3 Flash Preview scores responses on a 4-dimension rubric: safety, accuracy, appropriateness, and limitation acknowledgment. Returns structured JSON.</div>
-        <div style="font-size:12px;color:#6b7280;margin-top:8px;font-style:italic;">Limitation: judge can be overconfident. First test run returned 10/10 — warrants scrutiny.</div>
+        <div style="font-weight:600;color:#1d4ed8;margin-bottom:6px;">Layer 2 — Dual LLM-as-Judge</div>
+        <div style="font-size:13px;color:#374151;">Both Gemini 3 Flash Preview and Sarvam-M independently score responses on safety, accuracy, and appropriateness.</div>
+        <div style="font-size:12px;color:#6b7280;margin-top:8px;font-style:italic;">Cross-Family Validation: Addresses model alignment bias by comparing scores between a global model and an India-focused model.</div>
       </div>
     </div>
-
-    <h3>Why This Design</h3>
-    <p style="font-size:14px;color:#374151;">
-      Running both layers in parallel is itself an experiment: where they agree, we have higher confidence.
-      Where they diverge — rule check fails but LLM judge scores high — it surfaces exactly the brittleness
-      of keyword-based evaluation. This is more informative than either method alone.
-    </p>
-
-    <h3>Why Gemini 2.5 Flash as Endpoint</h3>
-    <p style="font-size:14px;color:#374151;">
-      Maternal and fetal health risk stratification is the stated track for this fellowship.
-      Evaluating a health Q&amp;A assistant creates direct relevance: the same evaluation questions —
-      Does the system flag emergencies? Does it recommend human oversight? Does it acknowledge uncertainty? —
-      apply to production health AI systems.
-    </p>
   </div>
 
   <!-- Part 3: Results -->
   <div class="section">
     <h2 style="margin-top:0">Part 3 — Evaluation Results</h2>
 
-    <h3>By Category</h3>
+    <h3>By Language</h3>
     <table style="margin-bottom:24px;">
-      <tr><th>Category</th><th>Cases</th><th>Avg Score</th><th>Rule Pass Rate</th></tr>
+      <tr><th>Language</th><th>Cases</th><th>Avg Gemini Score</th><th>Avg Sarvam Score</th><th>Rule Pass Rate</th></tr>
+      {lang_rows}
+    </table>
+
+    <h3>By Category (English)</h3>
+    <table style="margin-bottom:24px;">
+      <tr><th>Category</th><th>Cases</th><th>Avg Gemini Score</th><th>Rule Pass Rate</th></tr>
       {cat_rows}
+    </table>
+
+    <h3>Judge Disagreement (Flagged Cases)</h3>
+    <p style="font-size:13px;color:#6b7280;margin-bottom:8px;">Cases where the two judges disagreed by >2 points. These highlight potential cultural or linguistic nuances.</p>
+    <table style="margin-bottom:24px;">
+      <tr><th>Case ID</th><th>Language</th><th>Gemini Score</th><th>Sarvam Score</th><th>Diff</th></tr>
+      {disagree_rows}
     </table>
 
     <h3>Case-by-Case Results</h3>
     <table>
       <tr>
-        <th>ID</th><th>Category</th><th>Risk</th><th>Prompt</th>
-        <th>Rule</th><th>Safety</th><th>Accuracy</th><th>Score</th><th>Flags</th>
+        <th>ID</th><th>Lang</th><th>Risk</th><th>Prompt</th>
+        <th>Rule</th><th>Gemini</th><th>Sarvam</th><th>Flags</th>
       </tr>
       {rows_html}
     </table>
@@ -260,22 +291,8 @@ def generate_report(data: dict, output_path: str = "results/report.html"):
 
     <h3>What the results show</h3>
     <p style="font-size:14px;color:#374151;margin-bottom:12px;">
-      The LLM judge scores are consistently high — which itself requires scrutiny.
-      An LLM judging another LLM's output from the same provider family may share
-      similar blind spots. This is known as <em>judge-model alignment bias</em>.
-      The rule-based check acts as a partial corrective — any case where keywords
-      required for safe triage are absent is flagged regardless of judge confidence.
+      Comparing an India-focused judge (Sarvam-M) with a general model (Gemini) reveals cases where the general model misses nuances or where they disagree on safety guidelines. Judge agreement rate ({int(summary.get('judge_agreement_rate', 0)*100)}%) is a strong signal: where they diverge, it often means the case is nuanced or context-dependent.
     </p>
-
-    <h3>What this evaluation cannot tell you</h3>
-    <div class="warning">
-      <strong>Critical limitation:</strong> This evaluation tests fluency and surface-level safety signals.
-      It does not test factual accuracy against clinical ground truth, performance on code-switching
-      or non-English inputs, behavior under adversarial prompting, or real-world usability
-      by frontline health workers in low-connectivity environments.
-      A production maternal health AI system would require clinical expert review,
-      community testing, and ongoing monitoring — none of which this harness provides.
-    </div>
 
     <h3>Responsible AI considerations for health-domain deployment</h3>
     <ul style="font-size:14px;color:#374151;line-height:2;padding-left:20px;">
@@ -296,7 +313,7 @@ def generate_report(data: dict, output_path: str = "results/report.html"):
 
   <footer>
     Gates Foundation AI Fellowship — India 2026 &middot; Technical Assignment Submission by <strong>Nandini Khandelwal</strong><br/>
-    Evaluated {summary['total_cases']} test cases · {summary['run_timestamp']}
+    Evaluated {summary.get('total_evaluations', summary.get('total_cases', 0))} evaluations · {summary.get('run_timestamp', '')}
   </footer>
 
 </div>

@@ -41,7 +41,7 @@ def get_endpoint_response(prompt: str, retries: int = 3) -> dict:
     for attempt in range(retries):
         try:
             start = time.time()
-            response = model.generate_content(prompt)
+            response = model.generate_content(prompt, request_options={"timeout": 5})
             latency = round(time.time() - start, 2)
 
             return {
