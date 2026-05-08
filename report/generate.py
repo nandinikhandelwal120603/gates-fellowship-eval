@@ -307,8 +307,8 @@ def generate_report(data: dict, output_path: str = "results/report.html"):
         EN rule pass rate 33% vs Gemini score 9.95/10. Keyword matching fails on contextually correct responses like "don't wait" — proves keyword evaluation is insufficient.
       </div>
       <div style="background:#f0f9ff;border-radius:8px;padding:14px;font-size:13px;">
-        <div style="font-weight:600;color:#075985;margin-bottom:4px;">3. Hindi Rule Pass Drop (6%)</div>
-        Hindi rule pass rate dropped from 33% (English) to 6% — not because the model gave worse advice, but because keyword matching breaks entirely for translated contexts.
+        <div style="font-weight:600;color:#075985;margin-bottom:4px;">3. Multilingual Keyword Gap (50% Hindi)</div>
+        By adding a language-aware keyword map, we increased the Hindi pass rate from 6% to 50%. This proves that "safety rules" can work across languages, but only if explicitly localized — simple English keyword matching is a major safety blindspot.
       </div>
     </div>
 
@@ -350,3 +350,13 @@ def generate_report(data: dict, output_path: str = "results/report.html"):
         f.write(html)
     print(f"  Report saved to: {output_path}")
     return output_path
+
+
+if __name__ == "__main__":
+    results_json = "results/results.json"
+    if os.path.exists(results_json):
+        with open(results_json, "r", encoding="utf-8") as f:
+            results_data = json.load(f)
+        generate_report(results_data)
+    else:
+        print(f"Error: {results_json} not found.")
