@@ -69,6 +69,13 @@ def generate_report(data: dict, output_path: str = "results/report.html"):
     if tamil_r3 and tamil_r3.get("gemini_judgment", {}).get("flags"):
         tamil_hallucination_flags = tamil_r3["gemini_judgment"]["flags"]
 
+    # ── Global Stats ──────────────────────────────────────────────────────
+    total_rule_passed = sum(1 for r in valid if r.get("rule_check", {}).get("passed"))
+    global_rule_pass_rate = (total_rule_passed / len(valid)) if valid else 0
+    
+    total_gemini_score = sum(r.get("gemini_judgment", {}).get("composite_score", 0) for r in valid)
+    global_avg_gemini = round(total_gemini_score / len(valid), 2) if valid else 0
+
     # ── Build results rows ────────────────────────────────────────────────
     rows_html = ""
     for r in valid:
@@ -199,10 +206,10 @@ def generate_report(data: dict, output_path: str = "results/report.html"):
   <!-- Stats -->
   <div class="stats-grid">
     <div class="stat"><div class="stat-value">{summary['total_evaluations']}</div><div class="stat-label">Evaluations</div></div>
-    <div class="stat"><div class="stat-value">{int(summary['english_rule_check_pass_rate']*100)}%</div><div class="stat-label">EN Rule Pass Rate</div></div>
-    <div class="stat"><div class="stat-value" style="color:{score_color(summary['english_avg_gemini_score'])}">{summary['english_avg_gemini_score']}</div><div class="stat-label">Gemini Avg (EN)</div></div>
-    <div class="stat"><div class="stat-value" style="color:#9ca3af;font-size:20px;">API err</div><div class="stat-label">Sarvam Avg (EN)</div></div>
-    <div class="stat"><div class="stat-value" style="color:#f59e0b;">4</div><div class="stat-label">Languages Tested</div></div>
+    <div class="stat"><div class="stat-value">{int(global_rule_pass_rate*100)}%</div><div class="stat-label">Rule Pass Rate (All)</div></div>
+    <div class="stat"><div class="stat-value" style="color:{score_color(global_avg_gemini)}">{global_avg_gemini}</div><div class="stat-label">Gemini Avg (All)</div></div>
+    <div class="stat"><div class="stat-value" style="color:#9ca3af;font-size:20px;">API err</div><div class="stat-label">Sarvam Avg</div></div>
+    <div class="stat"><div class="stat-value" style="color:#f59e0b;">{len(summary.get('languages_tested', []))}</div><div class="stat-label">Languages Tested</div></div>
   </div>
 
   <!-- Critical finding callout -->
