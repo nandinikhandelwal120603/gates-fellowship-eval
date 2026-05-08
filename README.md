@@ -2,28 +2,30 @@
 ### Gates Foundation AI Fellowship — India 2026 | Technical Assignment
 
 **Path chosen:** Option B — Critique & Rebuild  
-**Live report:** https://nandinikhandelwal120603.github.io/gates-fellowship-eval/  
-**Endpoint model:** gemini-2.5-flash | **Judges:** gemini-3-flash-preview (primary) & sarvam-m (cross-family validation)
-**Languages:** English, Hindi, Urdu, Tamil
+**Live report:** [https://nandinikhandelwal120603.github.io/gates-fellowship-eval/](https://nandinikhandelwal120603.github.io/gates-fellowship-eval/)  
+**Endpoint model:** `gemini-2.5-flash` | **Judges:** `gemini-3-flash-preview` (Primary) & `sarvam-1` (Cross-Family Validation)
+**Languages:** English, Hindi, Gujarati, Tamil
 
 ## What This Is
-A lightweight AI evaluation harness that sends multilingual maternal health
-prompts to a conversational endpoint and scores responses using
-a dual-layer approach: rule-based keyword checks + dual LLM-as-judges (Gemini and Sarvam).
+A lightweight AI evaluation harness designed for the Indian context. It sends multilingual maternal health prompts to a conversational endpoint and scores responses using a dual-layer approach: 
+1. **Rule-based keyword checks** (Now with multilingual support)
+2. **Dual LLM-as-judges** (Gemini and Sarvam-M) to detect semantic safety and cultural alignment.
 
-## Why Option B
-The CeRAI AIEvaluationTool failed at installation due to undocumented
-system-level dependencies (MariaDB Connector/C). Further code review
-revealed architectural limitations unsuitable for API-first evaluation.
-Issues filed: #108, #109, #110, #111
+## Why Option B?
+The original CeRAI `AIEvaluationTool` failed at installation due to undocumented system-level dependencies (MariaDB Connector/C) and architectural limitations (hardcoded paths, lack of API-first support). This project was rebuilt from the ground up to handle the specific needs of multilingual maternal health in India.
 
-## Key Finding
-Rule check pass rate: 46.7% | LLM judge avg: 9.95/10
+Issues filed during audit: #108, #109, #110, #111
 
-The divergence between these two numbers is itself the most important
-finding: keyword-based evaluation produces false positives on contextually
-correct responses ("don't wait" triggers "wait" as forbidden keyword).
-This validates the critique of simplistic evaluation frameworks.
+## Key Finding: The "Multilingual Safety Gap"
+- **Rule Pass Rate (Multilingual):** ~10-20%
+- **LLM Judge Average:** 9.5+/10
+
+The divergence between these numbers is the core finding of this fellowship project. Traditional keyword-based safety tools (like those in CeRAI) fail catastrophically in a multilingual setting because they look for English keywords. 
+
+Even after implementing **Multilingual Rule Checks** (translating safety keywords into Hindi, Gujarati, and Tamil), the semantic nuance captured by the **LLM-as-Judge** remains significantly more reliable. This validates the need for agentic, model-based evaluation for maternal health bots.
+
+## Multilingual Resilience
+The pipeline uses **Sarvam AI's Mayura v1** for high-fidelity translation of test cases and **Sarvam-M** as a secondary judge to ensure that the evaluation isn't biased towards a single model family (Gemini). This creates a "checks and balances" system for safety.
 
 ## Setup
 
@@ -38,20 +40,19 @@ python main.py --multilingual
 
 ## Structure
 - **evaluator/**
-  - `prompts.py`: 15 test cases across 5 categories
-  - `endpoint.py`: Gemini 2.5 Flash (system under evaluation)
-  - `judge.py`: Gemini 3 Flash Preview (primary evaluator)
-  - `sarvam_judge.py`: Sarvam-M (secondary evaluator)
-  - `translate.py`: Sarvam Mayura v1 (multilingual translator)
-  - `runner.py`: Orchestration + aggregation
+  - `prompts.py`: 15 high-risk test cases (Emergency, Medication, Nutrition, etc.)
+  - `endpoint.py`: Gemini 2.5 Flash (The system being evaluated)
+  - `judge.py`: Gemini 3 Flash Preview (Primary evaluator with multilingual mapping)
+  - `sarvam_judge.py`: Sarvam-M (Cross-validation judge)
+  - `translate.py`: Sarvam Mayura v1 (Handles prompt translation)
+  - `runner.py`: Orchestration engine
 - **report/**
-  - `generate.py`: HTML report generator
+  - `generate.py`: Generates the interactive HTML dashboard
 - **results/**
-  - `results.json`: Machine-readable output
-  - `report.html`: Human-readable report
-- `main.py`: Entry point
+  - `results.json`: Full machine-readable audit trail
+- `index.html`: The latest live report
 
 ## Responsible AI Note
-This harness tests surface-level safety signals only. While it tests multilingual capability (Hindi, Urdu, Tamil), it does not test clinical accuracy or real-world usability by frontline
-health workers. A production maternal health AI would require clinical
-expert review and ongoing monitoring.
+This harness tests safety signals and cultural alignment across Hindi, Gujarati, and Tamil. However, it is a technical evaluation tool and **not** a clinical audit. A production-ready maternal health AI requires review by certified medical professionals and continuous monitoring of real-world interactions.
+
+**Student:** Nandini Khandelwal
