@@ -87,7 +87,7 @@ def generate_report(data: dict, output_path: str = "results/report.html"):
             for f in flags
         ) if flags else '<span style="color:#9ca3af;font-size:12px;">None</span>'
 
-        prompt_display = r.get("prompt_sent_to_endpoint", r.get("prompt", ""))[:80] + "..."
+        prompt_display = r.get("prompt_sent_to_endpoint", r.get("prompt_original_english", r.get("prompt", "")))[:80] + "..."
         sarvam_score_html = fmt_score(
             sj.get("composite_score") if not sj.get("error") else None,
             sj.get("error")
